@@ -191,12 +191,12 @@ if st.session_state.matched_results:
     
     col1, col2, col3 = st.columns([1,2,1])
     with col1:
-        if st.button("< Previous", disabled=(st.session_state.current_page <= 0)):
+        if st.button("< Previous") and st.session_state.current_page > 0:
             st.session_state.current_page -= 1
             st.session_state.run_search = True 
         
     with col2:
-        st.write(f'Current Page {st.session_state.current_page}')
+        st.write(f'Current Page {st.session_state.current_page + 1}')
 
     with col3:
         if st.button("Next >"):

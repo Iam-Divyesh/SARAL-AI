@@ -6,7 +6,7 @@ from openai import AzureOpenAI
 import json
 from nlp_parsed import parse_recruiter_query,prompt_enhancer
 from SERP import query_making, serp_api_call
-from apify import apify_call
+
 from validate import validate_function, score_candidates
 from postgres_db import fetch_from_saral_data, check_completeness, data_input, cur, conn, store_prompt
 

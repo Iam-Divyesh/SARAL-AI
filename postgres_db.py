@@ -1,7 +1,7 @@
 import psycopg2
 import json
 from datetime import datetime, timedelta
-from sample import apify_json
+
 
 
 hostname = "13.201.135.196"

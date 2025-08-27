@@ -36,31 +36,35 @@ def parse_recruiter_query(query):
         - location: Array of city names if multiple cities are mentioned, or single city name as Array if only one city is mentioned.
         - work_preference: Work mode preference - one of: "remote", "onsite", "hybrid", null
         - job_type: Employment type - one of: "full-time", "part-time", "contract", "internship", null
+        - is_indian: true if the job location(s) are in India, false otherwise. 
+                     IMPORTANT: If no location is mentioned, always set is_indian = true.
 
         CRITICAL INSTRUCTIONS:
         1. For job_title, NEVER include phrases like "looking for", "need", "hiring", etc.
         2. For experience, if the query mentions "fresher", "fresh graduate", "entry level", use exactly "fresher"
-        3. Return ONLY valid JSON without any explanation or additional text.
-        4. Use your knowledge to recognize job titles across all industries and domains."""
+        3. For is_indian, check the location(s). If the location(s) are Indian cities or the query context is India-based, return true. 
+           If no location is mentioned at all, default to true.
+        4. Return ONLY valid JSON without any explanation or additional text.
+        5. Use your knowledge to recognize job titles across all industries and domains."""
 
         user_prompt = f"""Extract recruitment information from this query: "{query}"
 
         Examples of correct extraction:
 
         Input: "We are looking for a Python developer with 3 years experience from Mumbai"
-        Output: {{"job_title": "Python Developer", "skills": ["Python"], "experience": "3", "location": "Mumbai", "work_preference": null, "job_type": null}}
+        Output: {{"job_title": "Python Developer", "skills": ["Python"], "experience": "3", "location": ["Mumbai"], "work_preference": null, "job_type": null, "is_indian": true}}
 
         Input: "Need a senior React frontend developer with Redux, TypeScript, 5+ years"
-        Output: {{"job_title": "React Frontend Developer", "skills": ["React", "Redux", "TypeScript"], "experience": "5+", "location": null, "work_preference": null, "job_type": null}}
+        Output: {{"job_title": "React Frontend Developer", "skills": ["React", "Redux", "TypeScript"], "experience": "5+", "location": null, "work_preference": null, "job_type": null, "is_indian": true}}
 
         Input: "python developer with 2 year of experience from surat, ahmedabad and mumbai"
-        Output: {{"job_title": "Python Developer", "skills": ["Python"], "experience": "2", "location": ["Surat", "Ahmedabad", "Mumbai"], "work_preference": null, "job_type": null}}
+        Output: {{"job_title": "Python Developer", "skills": ["Python"], "experience": "2", "location": ["Surat", "Ahmedabad", "Mumbai"], "work_preference": null, "job_type": null, "is_indian": true}}
 
         Input: "Remote React developer needed, 5 years experience, Redux, TypeScript"
-        Output: {{"job_title": "React Developer", "skills": ["React", "Redux", "TypeScript"], "experience": "5", "location": null, "work_preference": "remote", "job_type": null}}
+        Output: {{"job_title": "React Developer", "skills": ["React", "Redux", "TypeScript"], "experience": "5", "location": null, "work_preference": "remote", "job_type": null, "is_indian": true}}
 
         Input: "Looking for fresher Java developer from Delhi"
-        Output: {{"job_title": "Java Developer", "skills": ["Java"], "experience": "fresher", "location": "Delhi", "work_preference": null, "job_type": null}}
+        Output: {{"job_title": "Java Developer", "skills": ["Java"], "experience": "fresher", "location": ["Delhi"], "work_preference": null, "job_type": null, "is_indian": true}}
 
         Now extract from the query: "{query}"
 
@@ -68,7 +72,8 @@ def parse_recruiter_query(query):
         1. Extract ONLY the job title without any prefixes like "looking for", "need", etc.
         2. Extract ONLY the city/location name without additional text.
         3. For fresher candidates, use exactly "fresher" as experience value.
-        4. Return ONLY valid JSON."""
+        4. For is_indian: true if job location(s) are Indian, false otherwise. If no location is provided, always return true.
+        5. Return ONLY valid JSON."""
 
         response = client.chat.completions.create(
             model=deployment,
@@ -86,6 +91,7 @@ def parse_recruiter_query(query):
         return {"error": "Invalid JSON returned from AI"}
     except Exception as e:
         return {"error": f"Unexpected error: {str(e)}"}
+
 
 
 def prompt_enhancer(prompt: str) -> str:

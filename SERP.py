@@ -86,5 +86,3 @@ def serp_api_call(query,start = 0, results_per_page = 10):
 
 
 
-
-

@@ -9,18 +9,23 @@ def validate_function(location,apify_json):
       unmatched_list = []
       
       for profile in apify_json:  
-            address = profile.get("addressWithCountry", "")
-            
-            if not address:
-                  unmatched_list.append(profile)  # no address → unmatched
-                  continue
-                  
-            address_lower = [part.strip().lower() for part in address.split(",")]
-            
+        address = profile.get("addressWithCountry", "")
+
+        if not address:
+            unmatched_list.append(profile)  # no address → unmatched
+            continue
+
+        address_lower = [part.strip().lower() for part in address.split(",")]
+
+        
+        if "india" in address_lower or any("india" in part for part in address_lower):
             if any(loc in address_lower for loc in locations):
-                  match_list.append(profile)
+                match_list.append(profile)
             else:
-                  unmatched_list.append(profile)
+                unmatched_list.append(profile)
+        else:
+            unmatched_list.append(profile)  
+
 
 
       return match_list , unmatched_list

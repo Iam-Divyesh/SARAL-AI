@@ -55,14 +55,15 @@ st.session_state.user_input = user_input
 
 # Show query parsing immediately (live preview)
 if user_input.strip():
-    parsed_data = parse_recruiter_query(user_input)
-    
+    parsed_data = parse_recruiter_query(user_input)   
     
     
     st.session_state.parsed_data = parsed_data
 
     if "error" in parsed_data:
         st.error(parsed_data["error"])
+    elif parsed_data.get("is_indian") == False:
+        print("Our platform is not allowing search for out of india")
     else:
         with st.expander("Query", expanded=True):
             col1, col2 = st.columns([1, 1])
@@ -72,6 +73,7 @@ if user_input.strip():
                 st.markdown(
                     f'**Experience:** {parsed_data.get("experience","None")} years of Experience'
                 )
+                st.markdown(f'is_indian :{parsed_data.get("is_indian","None")}')
             with col2:
                 st.markdown(f'**Location:** {parsed_data.get("location", "None")}')
                 st.markdown(
@@ -94,15 +96,21 @@ if st.button("Enhance Prompt", use_container_width=True):
     
 
 # Only fetch SERP + Apify when button clicked
-if st.button("Enter",use_container_width=True):
+if st.button(
+    "Enter",
+    use_container_width=True,
+    disabled=(parsed_data.get("is_indian") is False)  # disable only if explicitly False
+):
     st.session_state.current_page = 0  # reset pagination
-    st.session_state.run_search = True 
+    st.session_state.run_search = True
 
 
 if st.session_state.run_search:
     if not user_input.strip():
         st.warning("Please enter a valid query.")
         st.stop()
+    
+    
 
     store_prompt(conn,user_input,parsed_data)
     
@@ -225,9 +233,23 @@ if st.session_state.matched_results:
 
                 st.markdown(f"**Location:** {profiles.get('addressWithCountry','-')}")
                 st.markdown(f"**Email:** {profiles.get('email','None')}")
+
+                
+                experiences = profiles.get("experiences", [])
+                open_to_work = True  # default
+
+                for exp in experiences:
+                    caption = exp.get("caption", "")
+                    if "Present" in caption:   # if still working
+                        open_to_work = False
+                        break
+
+                st.markdown(f"**Open to Work:** {'False' if not open_to_work else 'True'}")
+
                 st.markdown(
                     f"**LinkedIn:** [LinkedIn]({profiles.get('linkedinUrl','')})"
                 )
+
 
             with col2:
                 st.markdown(f"### {profiles.get('fullName')}")

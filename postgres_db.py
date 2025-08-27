@@ -169,13 +169,14 @@ def store_prompt(conn, prompt: str, parsed_json: dict):
     location = parsed_json.get("location", [])
     work_preference = parsed_json.get("work_preference")
     job_type = parsed_json.get("job_type")
+    is_indian = parsed_json.get("is_indian")
 
     try:
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO saral_prompts
-                (prompt, job_title, skills, experience, location, work_preference, job_type, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (prompt, job_title, skills, experience, location, work_preference, job_type, created_at,is_indian)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)
             """, (
                 prompt,
                 job_title,
@@ -184,7 +185,8 @@ def store_prompt(conn, prompt: str, parsed_json: dict):
                 location if location else None,
                 work_preference,
                 job_type,
-                datetime.now()
+                datetime.now(),
+                is_indian
             ))
         conn.commit()
     except Exception as e:

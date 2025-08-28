@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": "saral_ai_api.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "saral_ai_api.py"
+    }
+  ]
+}

@@ -5,3 +5,4 @@ openai
 apify-client
 psycopg2-binary
 requests
+gunicorn

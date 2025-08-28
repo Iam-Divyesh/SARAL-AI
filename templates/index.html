@@ -6,7 +6,6 @@
     <title>Saral AI - LinkedIn Recruiter Assistant</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}"> -->
     <style>
         :root {
             --primary-color: #0077b5;
@@ -372,6 +371,18 @@
                     body: JSON.stringify({ query })
                 });
 
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
+                }
+
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('queryInput').value = data.enhanced_query;
@@ -410,7 +421,7 @@
             }
 
             currentQuery = query;
-            currentPage = 0; // Reset to first page
+            currentPage = 0;
             showLoading();
             hideMessages();
             updateProgress(0);
@@ -425,6 +436,18 @@
                     },
                     body: JSON.stringify({ query })
                 });
+
+                // Check if response is ok
+                if (!parseResponse.ok) {
+                    throw new Error(`Server error: ${parseResponse.status}`);
+                }
+
+                // Check if response is JSON
+                const contentType = parseResponse.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await parseResponse.text();
+                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
+                }
 
                 const parseData = await parseResponse.json();
                 if (!parseData.success) {
@@ -447,10 +470,21 @@
                     },
                     body: JSON.stringify({ 
                         query: query,
-                        parsed_data: parseData.parsed_data,
                         page: currentPage 
                     })
                 });
+
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                // Check if response is JSON
+                const searchContentType = response.headers.get('content-type');
+                if (!searchContentType || !searchContentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
+                }
 
                 updateProgress(70);
 
@@ -637,6 +671,18 @@
                     })
                 });
 
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
+                }
+
                 updateProgress(70);
 
                 const data = await response.json();
@@ -651,7 +697,7 @@
             } catch (error) {
                 showError('Error loading page: ' + error.message);
                 // Revert page on error
-                currentPage = Math.max(0, currentPage - (event.target.textContent.includes('Next') ? 1 : -1));
+                currentPage = Math.max(0, currentPage - 1);
             } finally {
                 hideLoading();
             }

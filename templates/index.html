@@ -4,120 +4,222 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Saral AI - LinkedIn Recruiter Assistant</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #0077b5;
-            --secondary-color: #00a0dc;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --error-color: #dc3545;
-            --dark-color: #2c3e50;
-            --light-bg: #f8f9fa;
+            --primary-color: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
+            font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dark-color);
         }
 
         .main-container {
-            background: white;
-            margin: 20px auto;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            overflow: hidden;
+            min-height: 100vh;
+            padding: 2rem 0;
         }
 
-        .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 30px;
+        .brand-header {
             text-align: center;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            font-weight: bold;
-        }
-
-        .content-area {
-            padding: 40px;
-        }
-
-        .query-input {
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 15px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .query-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(0,119,181,0.25);
-        }
-
-        .btn-custom {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            color: white;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin: 5px;
-        }
-
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,119,181,0.4);
+            margin-bottom: 3rem;
             color: white;
         }
 
-        .btn-secondary-custom {
-            background: linear-gradient(135deg, #6c757d, #495057);
-            border: none;
-            padding: 10px 25px;
+        .brand-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .brand-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .search-card {
+            background: white;
             border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            border: none;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .search-card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            font-weight: 500;
+            padding: 2rem;
+            border-bottom: none;
+        }
+
+        .search-card-header h5 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .search-card-body {
+            padding: 2rem;
+        }
+
+        .form-control {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 1rem;
             transition: all 0.3s ease;
-            margin: 5px;
+            background: var(--light-color);
         }
 
-        .btn-secondary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(108,117,125,0.4);
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+            background: white;
+        }
+
+        .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
         }
 
-        .query-display {
-            background: var(--light-bg);
-            border-radius: 15px;
-            padding: 25px;
-            margin: 20px 0;
-            border-left: 5px solid var(--primary-color);
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .query-preview {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f1f8ff 100%);
+            border: 2px solid var(--secondary-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .query-preview h6 {
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .results-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .results-summary {
+            background: linear-gradient(135deg, var(--success-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .pagination-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .pagination-info {
+            background: var(--light-color);
+            border-radius: 12px;
+            padding: 1rem;
+            font-weight: 500;
+            color: var(--dark-color);
         }
 
         .profile-card {
             background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 15px 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            border: 1px solid #e9ecef;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--border-color);
             transition: all 0.3s ease;
+            overflow: hidden;
+            margin-bottom: 2rem;
         }
 
         .profile-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary-color);
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--light-color) 0%, #ffffff 100%);
+            padding: 2rem;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .profile-image {
@@ -125,595 +227,651 @@
             height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid var(--primary-color);
+            border: 4px solid white;
+            box-shadow: var(--shadow-lg);
         }
 
-        .skills-tag {
-            display: inline-block;
-            background: var(--primary-color);
-            color: white;
-            padding: 5px 12px;
-            margin: 3px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 500;
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
         }
 
-        .experience-item {
-            background: #f8f9fa;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 10px;
-            border-left: 4px solid var(--secondary-color);
+        .profile-headline {
+            color: #6b7280;
+            font-style: italic;
+            margin-bottom: 1rem;
         }
 
         .score-badge {
-            background: linear-gradient(135deg, var(--success-color), #20c997);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .score-excellent { background: var(--success-color); color: white; }
+        .score-good { background: var(--primary-color); color: white; }
+        .score-fair { background: var(--warning-color); color: white; }
+        .score-poor { background: var(--danger-color); color: white; }
+        .score-none { background: #6b7280; color: white; }
+
+        .skill-tag {
+            display: inline-block;
+            background: var(--primary-color);
             color: white;
-            padding: 8px 16px;
+            padding: 0.3rem 0.8rem;
             border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 0.2rem;
         }
 
-        .loading-spinner {
-            display: none;
-            text-align: center;
-            padding: 20px;
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
         }
 
-        .stats-card {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            margin: 10px 0;
+        .info-icon {
+            width: 20px;
+            color: var(--primary-color);
+            margin-right: 0.75rem;
         }
 
-        .pagination-controls {
+        .unmatched-card {
+            background: white;
+            border-radius: 16px;
+            border: 2px solid var(--warning-color);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .unmatched-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 30px 0;
-            gap: 15px;
+            z-index: 9999;
         }
 
-        .error-message {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
+        .loading-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-xl);
         }
 
-        .success-message {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
         }
 
-        .unmatched-list {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 30px;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .progress-bar-custom {
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            height: 20px;
-            border-radius: 10px;
-            transition: width 0.3s ease;
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-weight: 500;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 768px) {
-            .content-area {
-                padding: 20px;
-            }
-            .header h1 {
-                font-size: 2rem;
-            }
-            .profile-card {
-                padding: 15px;
-            }
+            .brand-header h1 { font-size: 2rem; }
+            .brand-header p { font-size: 1rem; }
+            .search-card-header, .search-card-body { padding: 1.5rem; }
+            .results-summary { padding: 1.5rem; }
+            .profile-header { padding: 1.5rem; }
+            .stat-number { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="main-container">
-            <div class="header">
-                <h1><i class="fas fa-search"></i> Saral AI</h1>
-                <p class="mb-0">LinkedIn Recruiter Assistant</p>
+    <div class="main-container">
+        <div class="container">
+            <!-- Brand Header -->
+            <div class="brand-header">
+                <h1><i class="fas fa-brain me-3"></i>Saral AI</h1>
+                <p>Intelligent LinkedIn Recruiter Assistant</p>
             </div>
 
-            <div class="content-area">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="mb-4">
-                            <label for="queryInput" class="form-label h5">Enter your recruitment query:</label>
-                            <textarea 
-                                id="queryInput" 
-                                class="form-control query-input" 
-                                placeholder="e.g., Looking for Python developers with 3-5 years experience in Mumbai..."
-                                rows="4"></textarea>
+            <!-- Search Section -->
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-8">
+                    <div class="search-card">
+                        <div class="search-card-header">
+                            <h5><i class="fas fa-search me-3"></i>Find Your Perfect Candidates</h5>
                         </div>
-
-                        <div class="text-center mb-4">
-                            <button class="btn btn-secondary-custom" onclick="enhancePrompt()">
-                                <i class="fas fa-magic"></i> Enhance Prompt
-                            </button>
-                            <button class="btn btn-custom" onclick="searchCandidates()" id="searchBtn">
-                                <i class="fas fa-play"></i> Enter
-                            </button>
-                        </div>
-
-                        <div class="loading-spinner" id="loadingSpinner">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2">Searching for candidates...</p>
-                            <div class="progress mt-3" style="height: 20px;">
-                                <div class="progress-bar progress-bar-custom" id="progressBar" 
-                                     role="progressbar" style="width: 0%"></div>
-                            </div>
-                        </div>
-
-                        <div id="errorMessage" class="error-message" style="display: none;"></div>
-                        <div id="successMessage" class="success-message" style="display: none;"></div>
-
-                        <div id="queryDisplay" class="query-display" style="display: none;">
-                            <h5><i class="fas fa-info-circle"></i> Parsed Query Information</h5>
-                            <div class="row" id="queryDetails"></div>
-                        </div>
-
-                        <div id="resultsStats" style="display: none;">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="stats-card">
-                                        <h3 id="matchedCount">0</h3>
-                                        <p class="mb-0">Matched Profiles</p>
-                                    </div>
+                        <div class="search-card-body">
+                            <form id="searchForm">
+                                <div class="mb-4">
+                                    <label for="queryInput" class="form-label fw-semibold mb-3">Describe the candidate you're looking for:</label>
+                                    <textarea class="form-control" id="queryInput" rows="4" 
+                                        placeholder="e.g., Looking for a Senior Python Developer with Django experience, 5+ years, based in Mumbai or Bangalore"></textarea>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="stats-card" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
-                                        <h3 id="unmatchedCount">0</h3>
-                                        <p class="mb-0">Unmatched Profiles</p>
-                                    </div>
+                                <div class="d-flex gap-3 justify-content-end">
+                                    <button type="button" class="btn btn-outline-primary" id="enhanceBtn">
+                                        <i class="fas fa-magic me-2"></i>Enhance Query
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="searchBtn">
+                                        <i class="fas fa-search me-2"></i>Search Candidates
+                                    </button>
                                 </div>
+                            </form>
+
+                            <!-- Query Preview -->
+                            <div id="queryPreview" class="query-preview" style="display: none;">
+                                <h6><i class="fas fa-eye me-2"></i>Query Analysis</h6>
+                                <div id="previewContent"></div>
                             </div>
-                        </div>
-
-                        <div class="pagination-controls" id="paginationControls" style="display: none;">
-                            <button class="btn btn-secondary-custom" onclick="previousPage()" id="prevBtn">
-                                <i class="fas fa-chevron-left"></i> Previous
-                            </button>
-                            <span id="pageInfo" class="mx-3 fw-bold">Page 1</span>
-                            <button class="btn btn-secondary-custom" onclick="nextPage()" id="nextBtn">
-                                Next <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-
-                        <div id="candidateResults"></div>
-
-                        <div id="unmatchedResults" class="unmatched-list" style="display: none;">
-                            <h5><i class="fas fa-exclamation-triangle"></i> Unmatched Profiles</h5>
-                            <div id="unmatchedList"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" style="display: none;">
+                <!-- Results Summary -->
+                <div class="results-container fade-in">
+                    <div class="results-summary">
+                        <div class="row" id="resultsSummary">
+                            <!-- Summary will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="paginationContainer" class="pagination-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button class="btn btn-outline-primary" id="prevBtn" onclick="changePage(-1)">
+                            <i class="fas fa-chevron-left me-2"></i>Previous
+                        </button>
+                        <div class="pagination-info" id="paginationInfo">
+                            <!-- Pagination info will be injected here -->
+                        </div>
+                        <button class="btn btn-outline-primary" id="nextBtn" onclick="changePage(1)">
+                            Next<i class="fas fa-chevron-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Matched Profiles -->
+                <div id="matchedProfiles">
+                    <!-- Matched profiles will be injected here -->
+                </div>
+
+                <!-- Unmatched Profiles -->
+                <div id="unmatchedProfiles" class="mt-4">
+                    <!-- Unmatched profiles will be injected here -->
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h5 class="mb-2">Processing Your Search</h5>
+            <p class="text-muted mb-0">Finding the best candidates for you...</p>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000; max-width: 400px;"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         let currentPage = 0;
         let currentQuery = '';
-        let currentResults = {
-            matched: [],
-            unmatched: [],
-            parsed_data: {}
-        };
+        let searchData = null;
 
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
-            errorDiv.style.display = 'block';
-            document.getElementById('successMessage').style.display = 'none';
-        }
+        // Form submission
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 0;
+            performSearch();
+        });
 
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-            successDiv.style.display = 'block';
-            document.getElementById('errorMessage').style.display = 'none';
-        }
-
-        function hideMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-        }
-
-        function showLoading() {
-            document.getElementById('loadingSpinner').style.display = 'block';
-            document.getElementById('searchBtn').disabled = true;
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingSpinner').style.display = 'none';
-            document.getElementById('searchBtn').disabled = false;
-        }
-
-        function updateProgress(percentage) {
-            document.getElementById('progressBar').style.width = percentage + '%';
-        }
-
-        async function enhancePrompt() {
+        // Enhance prompt button
+        document.getElementById('enhanceBtn').addEventListener('click', function() {
             const query = document.getElementById('queryInput').value.trim();
             if (!query) {
-                showError('Please enter a query first');
+                showAlert('Please enter a query first', 'warning');
                 return;
             }
+            enhancePrompt(query);
+        });
 
+        async function enhancePrompt(query) {
             try {
+                showLoading(true, 'Enhancing your query...');
                 const response = await fetch('/enhance_prompt', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ query })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
                 });
 
-                // Check if response is ok
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
-                }
-
                 const data = await response.json();
+                
                 if (data.success) {
                     document.getElementById('queryInput').value = data.enhanced_query;
-                    showSuccess('Prompt enhanced successfully!');
+                    showAlert('Query enhanced successfully!', 'success');
                 } else {
-                    showError(data.error || 'Failed to enhance prompt');
+                    showAlert(data.error || 'Failed to enhance query', 'danger');
                 }
             } catch (error) {
-                showError('Error enhancing prompt: ' + error.message);
+                showAlert('Error enhancing query: ' + error.message, 'danger');
+            } finally {
+                showLoading(false);
             }
         }
 
-        function displayParsedQuery(parsedData) {
-            const queryDetails = document.getElementById('queryDetails');
-            queryDetails.innerHTML = `
-                <div class="col-md-6">
-                    <p><strong>Job Title:</strong> ${parsedData.job_title || 'None'}</p>
-                    <p><strong>Skills:</strong> ${Array.isArray(parsedData.skills) ? parsedData.skills.join(', ') : parsedData.skills || 'None'}</p>
-                    <p><strong>Experience:</strong> ${parsedData.experience || 'None'} years</p>
-                    <p><strong>Indian Candidate:</strong> ${parsedData.is_indian ? 'Yes' : 'No'}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Location:</strong> ${parsedData.location || 'None'}</p>
-                    <p><strong>Work Preference:</strong> ${parsedData.work_preference || 'None'}</p>
-                    <p><strong>Job Type:</strong> ${parsedData.job_type || 'None'}</p>
-                </div>
-            `;
-            document.getElementById('queryDisplay').style.display = 'block';
-        }
-
-        async function searchCandidates() {
+        async function performSearch() {
             const query = document.getElementById('queryInput').value.trim();
             if (!query) {
-                showError('Please enter a query first');
+                showAlert('Please enter a search query', 'warning');
                 return;
             }
 
             currentQuery = query;
-            currentPage = 0;
-            showLoading();
-            hideMessages();
-            updateProgress(0);
 
             try {
-                // First parse the query
-                updateProgress(10);
+                showLoading(true, 'Analyzing your query...');
+                
+                // First parse the query to show preview
                 const parseResponse = await fetch('/parse_query', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ query })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
                 });
-
-                // Check if response is ok
-                if (!parseResponse.ok) {
-                    throw new Error(`Server error: ${parseResponse.status}`);
-                }
-
-                // Check if response is JSON
-                const contentType = parseResponse.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await parseResponse.text();
-                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
-                }
 
                 const parseData = await parseResponse.json();
-                if (!parseData.success) {
-                    throw new Error(parseData.error || 'Failed to parse query');
+                
+                if (parseData.success) {
+                    showQueryPreview(parseData.parsed_data);
+                    
+                    if (parseData.is_indian === false) {
+                        showAlert('Our platform currently supports searches within India only', 'warning');
+                        showLoading(false);
+                        return;
+                    }
+                } else {
+                    showAlert(parseData.error || 'Failed to parse query', 'danger');
+                    showLoading(false);
+                    return;
                 }
 
-                // Check if query is for Indian candidates
-                if (parseData.parsed_data.is_indian === false) {
-                    throw new Error('Our platform only supports searches for candidates in India');
-                }
+                showLoading(true, 'Searching for candidates...');
 
-                displayParsedQuery(parseData.parsed_data);
-                updateProgress(30);
-
-                // Now search for candidates
-                const response = await fetch('/search', {
+                // Now perform the actual search
+                const searchResponse = await fetch('/search', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        query: query,
-                        page: currentPage 
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, page: currentPage })
                 });
 
-                // Check if response is ok
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-
-                // Check if response is JSON
-                const searchContentType = response.headers.get('content-type');
-                if (!searchContentType || !searchContentType.includes('application/json')) {
-                    const text = await response.text();
-                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
-                }
-
-                updateProgress(70);
-
-                const data = await response.json();
+                const data = await searchResponse.json();
+                
                 if (data.success) {
-                    currentResults = data;
+                    searchData = data;
                     displayResults(data);
-                    updateProgress(100);
-                    showSuccess(`Search completed! Found ${data.matched_results.length} matched profiles.`);
+                    showAlert(`Found ${data.matched_count} matching profiles!`, 'success');
                 } else {
-                    throw new Error(data.error || 'Search failed');
+                    showAlert(data.error || 'Search failed', 'danger');
                 }
             } catch (error) {
-                showError('Error during search: ' + error.message);
+                showAlert('Error performing search: ' + error.message, 'danger');
             } finally {
-                hideLoading();
+                showLoading(false);
             }
+        }
+
+        function showQueryPreview(parsedData) {
+            const preview = document.getElementById('queryPreview');
+            const content = document.getElementById('previewContent');
+            
+            content.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <strong>Job Title:</strong><br>
+                        <span class="text-primary">${parsedData.job_title || 'Not specified'}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Skills:</strong><br>
+                        <span class="text-primary">${parsedData.skills ? parsedData.skills.join(', ') : 'Not specified'}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Experience:</strong><br>
+                        <span class="text-primary">${parsedData.experience || 'Not specified'} years</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Location:</strong><br>
+                        <span class="text-primary">${parsedData.location ? parsedData.location.join(', ') : 'Not specified'}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Work Preference:</strong><br>
+                        <span class="text-primary">${parsedData.work_preference || 'Not specified'}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Job Type:</strong><br>
+                        <span class="text-primary">${parsedData.job_type || 'Not specified'}</span>
+                    </div>
+                </div>
+            `;
+            
+            preview.style.display = 'block';
+            preview.classList.add('fade-in');
         }
 
         function displayResults(data) {
-            // Display stats
-            document.getElementById('matchedCount').textContent = data.matched_results.length;
-            document.getElementById('unmatchedCount').textContent = data.unmatched_results.length;
-            document.getElementById('resultsStats').style.display = 'block';
+            // Show results section
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            resultsSection.classList.add('fade-in');
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
+            // Display summary
+            displaySummary(data);
+            
             // Display pagination
-            updatePagination();
-
-            // Display matched results
-            displayCandidates(data.matched_results);
-
-            // Display unmatched results
-            displayUnmatchedCandidates(data.unmatched_results);
+            displayPagination(data);
+            
+            // Display matched profiles
+            displayMatchedProfiles(data.matched_profiles);
+            
+            // Display unmatched profiles
+            displayUnmatchedProfiles(data.unmatched_profiles);
         }
 
-        function updatePagination() {
-            document.getElementById('pageInfo').textContent = `Page ${currentPage + 1}`;
-            document.getElementById('paginationControls').style.display = 'flex';
-            document.getElementById('prevBtn').disabled = currentPage === 0;
+        function displaySummary(data) {
+            const summary = document.getElementById('resultsSummary');
+            summary.innerHTML = `
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number">${data.matched_count}</div>
+                        <div class="stat-label">Matched Profiles</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number">${data.unmatched_count}</div>
+                        <div class="stat-label">Unmatched Profiles</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number">${data.total_results || 0}</div>
+                        <div class="stat-label">Total Found</div>
+                    </div>
+                </div>
+            `;
         }
 
-        function displayCandidates(candidates) {
-            const resultsDiv = document.getElementById('candidateResults');
-            if (!candidates || candidates.length === 0) {
-                resultsDiv.innerHTML = '<div class="text-center"><h5>No matched candidates found</h5></div>';
+        function displayPagination(data) {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const paginationInfo = document.getElementById('paginationInfo');
+            
+            prevBtn.disabled = !data.has_prev;
+            nextBtn.disabled = !data.has_next;
+            
+            paginationInfo.innerHTML = `
+                Page <strong>${data.current_page}</strong> of <strong>${data.total_pages || 1}</strong>
+                <br><small class="text-muted">${data.total_results || 0} total results</small>
+            `;
+        }
+
+        function displayMatchedProfiles(profiles) {
+            const container = document.getElementById('matchedProfiles');
+            
+            if (profiles.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No matched profiles found for this page. Try adjusting your search criteria.
+                    </div>`;
                 return;
             }
 
-            let html = '<h4><i class="fas fa-users"></i> Candidate Profiles</h4>';
+            let html = '<h3 class="mb-4 text-center"><i class="fas fa-users me-2"></i>Matched Candidates</h3>';
             
-            candidates.forEach((candidate, index) => {
-                const skills = Array.isArray(candidate.skills) 
-                    ? candidate.skills.map(s => typeof s === 'object' ? s.title : s).slice(0, 10)
-                    : [];
-                
-                const experiences = candidate.experiences || [];
-                const isOpenToWork = !experiences.some(exp => 
-                    exp.caption && exp.caption.includes('Present')
-                );
-
-                const defaultImage = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDVO09x_DXK3p4Mt1j08Ab0R875TdhsDcG2A&s";
+            profiles.forEach((profile, index) => {
+                const skills = parseSkills(profile.skills);
+                const experiences = parseExperiences(profile.experiences);
+                const openToWork = checkOpenToWork(experiences);
 
                 html += `
-                    <div class="profile-card">
-                        <div class="row">
-                            <div class="col-md-3 text-center">
-                                <img src="${candidate.profilePic || defaultImage}" 
-                                     alt="Profile" class="profile-image mb-3">
-                                <div class="score-badge mb-2">
-                                    Score: ${candidate.score || 'N/A'}
+                    <div class="profile-card fade-in">
+                        <div class="profile-header">
+                            <div class="row align-items-center">
+                                <div class="col-md-3 text-center">
+                                    <img src="${profile.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'}" 
+                                         class="profile-image" alt="Profile Picture">
+                                    <div class="mt-3">
+                                        ${getScoreBadge(profile.score)}
+                                    </div>
                                 </div>
-                                <p><strong>Location:</strong><br>${candidate.addressWithCountry || 'N/A'}</p>
-                                <p><strong>Email:</strong><br>${candidate.email || 'None'}</p>
-                                <p><strong>Open to Work:</strong><br>${isOpenToWork ? 'True' : 'False'}</p>
-                                ${candidate.linkedinUrl ? `
-                                    <a href="${candidate.linkedinUrl}" target="_blank" class="btn btn-custom btn-sm">
-                                        <i class="fab fa-linkedin"></i> LinkedIn
-                                    </a>
-                                ` : ''}
-                            </div>
-                            <div class="col-md-9">
-                                <h4>${candidate.fullName || 'Unknown'}</h4>
-                                ${candidate.headline ? `<p class="text-muted fst-italic">${candidate.headline}</p>` : ''}
-                                
-                                ${skills.length > 0 ? `
-                                    <div class="mb-3">
-                                        <strong>Skills:</strong><br>
-                                        ${skills.map(skill => `<span class="skills-tag">${skill}</span>`).join('')}
+                                <div class="col-md-9">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <div class="profile-name">${profile.fullName || 'Unknown'}</div>
+                                            ${profile.headline ? `<div class="profile-headline">${profile.headline}</div>` : ''}
+                                        </div>
+                                        <a href="${profile.linkedinUrl || '#'}" target="_blank" class="btn btn-primary">
+                                            <i class="fab fa-linkedin me-2"></i>View Profile
+                                        </a>
                                     </div>
-                                ` : ''}
-
-                                ${candidate.about ? `
-                                    <div class="mb-3">
-                                        <strong>About:</strong>
-                                        <p>${candidate.about.length > 250 ? candidate.about.substring(0, 250) + '...' : candidate.about}</p>
-                                    </div>
-                                ` : ''}
-
-                                ${experiences.length > 0 ? `
-                                    <div class="mb-3">
-                                        <strong>Experience:</strong>
-                                        ${experiences.map(exp => `
-                                            <div class="experience-item">
-                                                <strong>${exp.title || ''}</strong> at <strong>${exp.subtitle || exp.metadata || ''}</strong>
-                                                <small class="text-muted d-block">${exp.caption || ''}</small>
-                                                ${exp.description && exp.description.length > 0 ? `
-                                                    <ul class="mt-2">
-                                                        ${exp.description.map(desc => 
-                                                            typeof desc === 'object' && desc.text ? 
-                                                            `<li>${desc.text}</li>` : ''
-                                                        ).join('')}
-                                                    </ul>
-                                                ` : ''}
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-sm-6">
+                                            <div class="info-item">
+                                                <i class="fas fa-map-marker-alt info-icon"></i>
+                                                <span>${profile.addressWithCountry || 'Location not specified'}</span>
                                             </div>
-                                        `).join('')}
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="info-item">
+                                                <i class="fas fa-envelope info-icon"></i>
+                                                <span>${profile.email || 'Email not available'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="info-item">
+                                                <i class="fas fa-briefcase info-icon"></i>
+                                                <span class="badge ${openToWork ? 'bg-success' : 'bg-secondary'}">
+                                                    ${openToWork ? 'Open to Work' : 'Currently Employed'}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body p-4">
+                            ${skills.length > 0 ? `
+                                <div class="mb-4">
+                                    <h6 class="mb-3"><i class="fas fa-cogs me-2"></i>Skills</h6>
+                                    <div class="skills-container">
+                                        ${skills.slice(0, 12).map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+                                        ${skills.length > 12 ? '<span class="skill-tag">+' + (skills.length - 12) + ' more</span>' : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
 
-                                ${candidate.is_complete ? `
-                                    <div class="text-success">
-                                        <i class="fas fa-check-circle"></i> ${candidate.is_complete}
-                                    </div>
-                                ` : ''}
+                            ${profile.about ? `
+                                <div class="mb-4">
+                                    <h6 class="mb-3"><i class="fas fa-user me-2"></i>About</h6>
+                                    <p class="text-muted">${profile.about.length > 300 ? profile.about.substring(0, 300) + '...' : profile.about}</p>
+                                </div>
+                            ` : ''}
+
+                            ${experiences.length > 0 ? `
+                                <div>
+                                    <h6 class="mb-3"><i class="fas fa-briefcase me-2"></i>Recent Experience</h6>
+                                    ${experiences.slice(0, 3).map(exp => `
+                                        <div class="mb-3 p-3 bg-light rounded">
+                                            <div class="fw-semibold text-primary">${exp.title || 'Position not specified'}</div>
+                                            <div class="text-muted">${exp.subtitle || exp.metadata || 'Company not specified'}</div>
+                                            <small class="text-muted">${exp.caption || 'Duration not specified'}</small>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function displayUnmatchedProfiles(profiles) {
+            const container = document.getElementById('unmatchedProfiles');
+            
+            if (profiles.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '<h3 class="mb-4 text-center"><i class="fas fa-user-slash me-2"></i>Unmatched Profiles</h3><div class="row g-3">';
+            
+            profiles.forEach((profile) => {
+                html += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="unmatched-card card h-100 p-3">
+                            <div class="d-flex align-items-center">
+                                <img src="${profile.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face'}" 
+                                     class="rounded-circle me-3" width="60" height="60" alt="Profile Picture">
+                                <div class="flex-grow-1">
+                                    <h6 class="card-title mb-1">${profile.fullName || 'Unknown'}</h6>
+                                    <small class="text-muted d-block mb-2">${profile.addressWithCountry || 'Unknown Location'}</small>
+                                    <a href="${profile.linkedinUrl || '#'}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fab fa-linkedin me-1"></i>View
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
             });
-
-            resultsDiv.innerHTML = html;
-        }
-
-        function displayUnmatchedCandidates(unmatchedCandidates) {
-            const unmatchedDiv = document.getElementById('unmatchedResults');
-            const unmatchedList = document.getElementById('unmatchedList');
             
-            if (!unmatchedCandidates || unmatchedCandidates.length === 0) {
-                unmatchedDiv.style.display = 'none';
-                return;
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function parseSkills(skills) {
+            if (Array.isArray(skills)) return skills.map(s => typeof s === 'object' ? s.title : s).filter(Boolean);
+            if (typeof skills === 'string') {
+                try { return JSON.parse(skills).map(s => typeof s === 'object' ? s.title : s).filter(Boolean); }
+                catch { return []; }
             }
-
-            let html = '';
-            unmatchedCandidates.forEach((candidate, index) => {
-                html += `
-                    <p>${index + 1}. ${candidate.fullName || 'Unknown'} - 
-                    ${candidate.addressWithCountry || 'Unknown'} 
-                    ${candidate.linkedinUrl ? `<a href="${candidate.linkedinUrl}" target="_blank">LINKEDIN</a>` : ''}</p>
-                `;
-            });
-
-            unmatchedList.innerHTML = html;
-            unmatchedDiv.style.display = 'block';
+            return [];
         }
 
-        async function nextPage() {
-            currentPage++;
-            await searchPage();
-        }
-
-        async function previousPage() {
-            if (currentPage > 0) {
-                currentPage--;
-                await searchPage();
+        function parseExperiences(experiences) {
+            if (Array.isArray(experiences)) return experiences;
+            if (typeof experiences === 'string') {
+                try { return JSON.parse(experiences); }
+                catch { return []; }
             }
+            return [];
         }
 
-        async function searchPage() {
-            if (!currentQuery) return;
+        function checkOpenToWork(experiences) {
+            return !experiences.some(exp => exp.caption && exp.caption.includes('Present'));
+        }
 
-            showLoading();
-            hideMessages();
-            updateProgress(0);
+        function getScoreBadge(score) {
+            if (!score) return '<span class="score-badge score-none">No Score</span>';
+            if (score >= 80) return `<span class="score-badge score-excellent">Excellent: ${score}</span>`;
+            if (score >= 60) return `<span class="score-badge score-good">Good: ${score}</span>`;
+            if (score >= 40) return `<span class="score-badge score-fair">Fair: ${score}</span>`;
+            return `<span class="score-badge score-poor">Poor: ${score}</span>`;
+        }
 
-            try {
-                updateProgress(30);
-                const response = await fetch('/search', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        query: currentQuery,
-                        page: currentPage 
-                    })
-                });
+        function changePage(direction) {
+            if (!searchData) return;
+            
+            const newPage = currentPage + direction;
+            if (newPage < 0 || (direction > 0 && !searchData.has_next)) return;
+            
+            currentPage = newPage;
+            performSearch();
+        }
 
-                // Check if response is ok
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
-                }
-
-                updateProgress(70);
-
-                const data = await response.json();
-                if (data.success) {
-                    currentResults = data;
-                    displayResults(data);
-                    updateProgress(100);
-                    showSuccess(`Page ${currentPage + 1} loaded successfully!`);
-                } else {
-                    throw new Error(data.error || 'Failed to load page');
-                }
-            } catch (error) {
-                showError('Error loading page: ' + error.message);
-                // Revert page on error
-                currentPage = Math.max(0, currentPage - 1);
-            } finally {
-                hideLoading();
+        function showLoading(show, message = 'Processing your search...') {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.querySelector('p').textContent = message;
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
             }
         }
 
-        // Auto-parse query as user types (optional feature)
-        let parseTimeout;
-        document.getElementById('queryInput').addEventListener('input', function() {
-            clearTimeout(parseTimeout);
-            parseTimeout = setTimeout(() => {
-                const query = this.value.trim();
-                if (query && query.length > 10) {
-                    // You can add auto-parsing here if desired
-                }
-            }, 500);
-        });
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertHTML = `
+                <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${getAlertIcon(type)} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', alertHTML);
+            
+            setTimeout(() => {
+                const alertElement = document.getElementById(alertId);
+                if (alertElement) alertElement.remove();
+            }, 5000);
+        }
+
+        function getAlertIcon(type) {
+            const icons = {
+                'success': 'check-circle',
+                'danger': 'exclamation-triangle',
+                'warning': 'exclamation-circle',
+                'info': 'info-circle'
+            };
+            return icons[type] || 'info-circle';
+        }
     </script>
 </body>
 </html>

@@ -13,17 +13,62 @@ api_key = os.getenv("AZURE_OPENAI_API_KEY")
 api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
+client = None  # Initialize client as None
 
 try:
     client = AzureOpenAI(api_key=api_key, api_version=api_version, azure_endpoint=endpoint)
 except Exception as e:
-   print(f"Failed to initialize Azure OpenAI client: {e}")
+    print(f"Failed to initialize Azure OpenAI client: {e}")
+    client = None
     
 
 def parse_recruiter_query(query):
     """Parse recruiter query using AI to extract structured data"""
     if not client:
-        return {"error": "Azure OpenAI client not available"}
+        # Mock function when Azure OpenAI is not available
+        import re
+        words = query.lower().split()
+        
+        # Extract job title (basic pattern matching)
+        job_title = "Developer"
+        if "python" in words: job_title = "Python Developer"
+        elif "java" in words: job_title = "Java Developer"
+        elif "data" in words: job_title = "Data Scientist"
+        elif "frontend" in words: job_title = "Frontend Developer"
+        elif "backend" in words: job_title = "Backend Developer"
+        
+        # Extract skills
+        skills = []
+        if "python" in words: skills.append("Python")
+        if "java" in words: skills.append("Java")
+        if "javascript" in words: skills.append("JavaScript")
+        if "react" in words: skills.append("React")
+        if "django" in words: skills.append("Django")
+        
+        # Extract experience
+        experience = "2"
+        for i, word in enumerate(words):
+            if word.isdigit() and i+1 < len(words) and ("year" in words[i+1] or "yr" in words[i+1]):
+                experience = word
+                break
+        if "fresher" in words: experience = "fresher"
+        
+        # Extract location
+        location = []
+        indian_cities = ["mumbai", "delhi", "bangalore", "pune", "hyderabad", "chennai", "kolkata", "ahmedabad", "surat", "gurgaon"]
+        for city in indian_cities:
+            if city in words:
+                location.append(city.title())
+        
+        return {
+            "job_title": job_title,
+            "skills": skills,
+            "experience": experience,
+            "location": location,
+            "work_preference": "remote" if "remote" in words else None,
+            "job_type": "full-time" if "full-time" in words else None,
+            "is_indian": True
+        }
 
     try:
         system_prompt = """You are an AI assistant that extracts structured recruitment information from natural language queries.
@@ -105,7 +150,7 @@ def prompt_enhancer(prompt: str) -> str:
         1. Clean up grammar and spelling mistakes.
         2. Expand shorthand into full professional wording.
         3. Preserve all important details: job title, skills, experience, location, work mode, job type.
-        4. Do NOT invent new requirements — only clarify what’s already in the query.
+        4. Do NOT invent new requirements — only clarify what's already in the query.
         5. Do not copy examples literally — adapt based on the actual input.
         6. Return ONLY the enhanced recruiter prompt as plain text (no JSON)."""
 
@@ -139,4 +184,3 @@ def prompt_enhancer(prompt: str) -> str:
     except Exception as e:
         print(f"Error in prompt_enhancer: {e}")
         return prompt  # fallback to original
-

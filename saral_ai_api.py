@@ -174,6 +174,9 @@ def search_profiles():
             
         if parsed_data.get("is_indian") is False:
             return jsonify({'error': 'Our platform currently supports searches within India only'}), 400
+        
+        if parsed_data.get("is_valid") is False:
+            return jsonify({'error': 'Please Give valid prompt so that Saral AI can understand'}), 400
             
         # Store prompt in database
         print("💾 Storing prompt in database...")

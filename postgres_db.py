@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 
 
-hostname = "13.201.135.196"
+hostname = "13.233.107.79"
 database = "saral_ai"
 username = "saral_user"
 pwd = "8k$ScgT97y9£>D"

@@ -36,7 +36,7 @@ def check_completeness(cur, name, location, linkedin_url, headline, skills, expe
             message = "missing required fields"
             break
 
-    cur.execute("SELECT id FROM saral_data WHERE linkedin_url = %s", (linkedin_url,))
+    cur.execute("SELECT id FROM profiles WHERE linkedin_url = %s", (linkedin_url,))
     existing = cur.fetchone()
     if existing:
         return False, "this data is duplicate", False
@@ -58,7 +58,7 @@ def check_completeness(cur, name, location, linkedin_url, headline, skills, expe
 
 def data_input(json_data):
       insert_script = '''
-            INSERT INTO saral_data
+            INSERT INTO profiles
             (name, location, email, linkedin_url, headline, skills, about, experience, profile_pic, is_complete, created_at)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
       '''    
@@ -174,7 +174,7 @@ def store_prompt(conn, prompt: str, parsed_json: dict):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO saral_prompts
+                INSERT INTO profiles
                 (prompt, job_title, skills, experience, location, work_preference, job_type, created_at,is_indian)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)
             """, (
@@ -204,7 +204,7 @@ try:
       cur = conn.cursor()
 
       create_script = """
-                  CREATE TABLE IF NOT EXISTS saral_data (
+                  CREATE TABLE IF NOT EXISTS profiles (
                   id SERIAL PRIMARY KEY,
                   name TEXT,
                   location TEXT,
@@ -240,6 +240,7 @@ finally:
 #     if conn is not None:
 #         conn.close()
       pass
+
 
 
 

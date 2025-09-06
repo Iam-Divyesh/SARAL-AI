@@ -134,7 +134,7 @@ def fetch_from_saral_data(serp_data, conn):
             for link in serp_json.values():
                   cur.execute("""
                         SELECT name, location, email, linkedin_url, headline, skills, about, experience, profile_pic, is_complete, created_at
-                        FROM saral_data
+                        FROM profiles
                         WHERE linkedin_url = %s AND created_at >= %s
 
                   """, (link, one_month_ago))
@@ -243,6 +243,7 @@ finally:
 
 
 print('hello')
+
 
 
 

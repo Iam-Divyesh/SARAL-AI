@@ -267,9 +267,7 @@ def search_profiles():
         return jsonify({
             'success': True,
             'matched_profiles': matched,
-            'unmatched_profiles': unmatched,
             'matched_count': len(matched),
-            'unmatched_count': len(unmatched),
             'current_page': page + 1,
             'total_pages': total_pages,
             'total_results': total_serp_results,
@@ -277,6 +275,7 @@ def search_profiles():
             'has_next': has_next,
             'has_prev': page > 0
         })
+
         
     except Exception as e:
         # Log the full traceback for debugging

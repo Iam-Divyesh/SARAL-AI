@@ -133,7 +133,7 @@ def fetch_from_saral_data(serp_data, conn):
       with conn.cursor() as cur:
             for link in serp_json.values():
                   cur.execute("""
-                        SELECT name, location, email, linkedin_url, headline, skills, about, experience, profile_pic, is_complete, created_at
+                        SELECT id, name, location, email, linkedin_url, headline, skills, about, experience, profile_pic, is_complete, created_at
                         FROM profiles
                         WHERE linkedin_url = %s AND created_at >= %s
 
@@ -142,17 +142,18 @@ def fetch_from_saral_data(serp_data, conn):
                   row = cur.fetchone()
                   if row:
                         results.append({
-                        "fullName": row[0] if row[0] else "Unknown",
-                        "addressWithCountry": row[1] if row[1] else "Unknown",
-                        "email": row[2] if row[2] else "-",
-                        "linkedinUrl": row[3] if row[3] else "-",
-                        "headline": row[4] if row[4] else "-",
-                        "skills": row[5] if row[5] else [],
-                        "about": row[6] if row[6] else "",
-                        "experiences": row[7] if row[7] else [],
-                        "profilePic": row[8] if row[8] else None,   
-                        "is_complete": row[9],
-                        "created_at": row[10]
+                              "id": row[0],  # ✅ add id
+                              "fullName": row[1] if row[1] else "Unknown",
+                              "addressWithCountry": row[2] if row[2] else "Unknown",
+                              "email": row[3] if row[3] else "-",
+                              "linkedinUrl": row[4] if row[4] else "-",
+                              "headline": row[5] if row[5] else "-",
+                              "skills": row[6] if row[6] else [],
+                              "about": row[7] if row[7] else "",
+                              "experiences": row[8] if row[8] else [],
+                              "profilePic": row[9] if row[9] else None,
+                              "is_complete": row[10],
+                              "created_at": row[11]
                         })
 
 

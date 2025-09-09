@@ -175,7 +175,7 @@ def store_prompt(conn, prompt: str, parsed_json: dict):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO profiles
+                INSERT INTO saral_prompt
                 (prompt, job_title, skills, experience, location, work_preference, job_type, created_at,is_indian)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)
             """, (

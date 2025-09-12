@@ -410,18 +410,10 @@
                     </div>
                 </div>
 
-                <!-- Pagination -->
-                <div id="paginationContainer" class="pagination-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <button class="btn btn-outline-primary" id="prevBtn" onclick="changePage(-1)">
-                            <i class="fas fa-chevron-left me-2"></i>Previous
-                        </button>
-                        <div class="pagination-info" id="paginationInfo">
-                            <!-- Pagination info will be injected here -->
-                        </div>
-                        <button class="btn btn-outline-primary" id="nextBtn" onclick="changePage(1)">
-                            Next<i class="fas fa-chevron-right ms-2"></i>
-                        </button>
+                <!-- Pagination Info -->
+                <div id="paginationInfo" class="pagination-card">
+                    <div class="pagination-info text-center">
+                        <!-- Pagination info will be injected here -->
                     </div>
                 </div>
 
@@ -430,9 +422,9 @@
                     <!-- Matched profiles will be injected here -->
                 </div>
 
-                <!-- Unmatched Profiles -->
-                <div id="unmatchedProfiles" class="mt-4">
-                    <!-- Unmatched profiles will be injected here -->
+                <!-- Pagination Controls -->
+                <div id="paginationControls" class="text-center mt-4">
+                    <!-- Pagination controls will be injected here -->
                 </div>
             </div>
         </div>
@@ -452,16 +444,16 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
-        let currentPage = 0;
         let currentQuery = '';
         let searchData = null;
+        let currentPage = 1;
 
         // Form submission
         document.getElementById('searchForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            currentPage = 0;
+            currentPage = 1; // Reset to first page for new search
             performSearch();
         });
 
@@ -485,7 +477,7 @@
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success) {
                     document.getElementById('queryInput').value = data.enhanced_query;
                     showAlert('Query enhanced successfully!', 'success');
@@ -499,7 +491,7 @@
             }
         }
 
-        async function performSearch() {
+        async function performSearch(page = 1) {
             const query = document.getElementById('queryInput').value.trim();
             if (!query) {
                 showAlert('Please enter a search query', 'warning');
@@ -507,48 +499,54 @@
             }
 
             currentQuery = query;
+            currentPage = page;
 
             try {
-                showLoading(true, 'Analyzing your query...');
-                
-                // First parse the query to show preview
-                const parseResponse = await fetch('/parse_query', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
-                });
+                if (page === 1) {
+                    showLoading(true, 'Analyzing your query...');
 
-                const parseData = await parseResponse.json();
-                
-                if (parseData.success) {
-                    showQueryPreview(parseData.parsed_data);
-                    
-                    if (parseData.is_indian === false) {
-                        showAlert('Our platform currently supports searches within India only', 'warning');
+                    // First parse the query to show preview (only on first page)
+                    const parseResponse = await fetch('/parse_query', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: query })
+                    });
+
+                    const parseData = await parseResponse.json();
+
+                    if (parseData.success) {
+                        showQueryPreview(parseData.parsed_data);
+
+                        if (parseData.is_indian === false) {
+                            showAlert('Our platform currently supports searches within India only', 'warning');
+                            showLoading(false);
+                            return;
+                        }
+                    } else {
+                        showAlert(parseData.error || 'Failed to parse query', 'danger');
                         showLoading(false);
                         return;
                     }
-                } else {
-                    showAlert(parseData.error || 'Failed to parse query', 'danger');
-                    showLoading(false);
-                    return;
                 }
 
-                showLoading(true, 'Searching for candidates...');
+                showLoading(true, `Live enriching candidates for page ${page}...`);
 
-                // Now perform the actual search
+                // Perform the search with live enriching
                 const searchResponse = await fetch('/search', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query, page: currentPage })
+                    body: JSON.stringify({ query: query, page: page })
                 });
 
                 const data = await searchResponse.json();
-                
+
                 if (data.success) {
                     searchData = data;
                     displayResults(data);
-                    showAlert(`Found ${data.matched_count} matching profiles!`, 'success');
+                    const enrichMessage = data.is_live_enriched ? 
+                        `Live enriched ${data.matched_count} profiles on page ${page}!` : 
+                        `Found ${data.matched_count} profiles on page ${page}!`;
+                    showAlert(enrichMessage, 'success');
                 } else {
                     showAlert(data.error || 'Search failed', 'danger');
                 }
@@ -562,7 +560,7 @@
         function showQueryPreview(parsedData) {
             const preview = document.getElementById('queryPreview');
             const content = document.getElementById('previewContent');
-            
+
             content.innerHTML = `
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -591,7 +589,7 @@
                     </div>
                 </div>
             `;
-            
+
             preview.style.display = 'block';
             preview.classList.add('fade-in');
         }
@@ -605,58 +603,118 @@
 
             // Display summary
             displaySummary(data);
-            
-            // Display pagination
-            displayPagination(data);
-            
+
+            // Display pagination info
+            displayPaginationInfo(data);
+
             // Display matched profiles
             displayMatchedProfiles(data.matched_profiles);
-            
-            // Display unmatched profiles
-            displayUnmatchedProfiles(data.unmatched_profiles);
+
+            // Display pagination controls
+            displayPaginationControls(data);
         }
 
         function displaySummary(data) {
             const summary = document.getElementById('resultsSummary');
             summary.innerHTML = `
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="stat-card">
                         <div class="stat-number">${data.matched_count}</div>
-                        <div class="stat-label">Matched Profiles</div>
+                        <div class="stat-label">Profiles on this Page</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="stat-card">
-                        <div class="stat-number">${data.unmatched_count}</div>
-                        <div class="stat-label">Unmatched Profiles</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card">
-                        <div class="stat-number">${data.total_results || 0}</div>
-                        <div class="stat-label">Total Found</div>
+                        <div class="stat-number">${data.total_matched || data.matched_count}</div>
+                        <div class="stat-label">Total Matched Profiles</div>
                     </div>
                 </div>
             `;
         }
 
-        function displayPagination(data) {
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const paginationInfo = document.getElementById('paginationInfo');
+        function displayPaginationInfo(data) {
+            const info = document.getElementById('paginationInfo');
+            const enrichStatus = data.is_live_enriched ? 
+                '<span class="badge bg-success ms-2">Live Enriched</span>' : '';
             
-            prevBtn.disabled = !data.has_prev;
-            nextBtn.disabled = !data.has_next;
-            
-            paginationInfo.innerHTML = `
-                Page <strong>${data.current_page}</strong> of <strong>${data.total_pages || 1}</strong>
-                <br><small class="text-muted">${data.total_results || 0} total results</small>
+            info.innerHTML = `
+                <div class="pagination-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Showing page ${data.current_page || 1} of ${data.total_pages || 1} 
+                    (${data.matched_count} profiles on this page, ${data.total_matched || data.matched_count} total)
+                    ${enrichStatus}
+                </div>
             `;
         }
+
+        function displayPaginationControls(data) {
+            const controls = document.getElementById('paginationControls');
+            const currentPage = data.current_page || 1;
+            const totalPages = data.total_pages || 1;
+            const hasNext = data.has_next || false;
+            const hasPrev = data.has_prev || false;
+
+            if (totalPages <= 1) {
+                controls.innerHTML = '';
+                return;
+            }
+
+            let html = '<nav><ul class="pagination justify-content-center">';
+
+            // Previous button
+            html += `
+                <li class="page-item ${!hasPrev ? 'disabled' : ''}">
+                    <button class="page-link" onclick="goToPage(${currentPage - 1})" ${!hasPrev ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                </li>
+            `;
+
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            if (startPage > 1) {
+                html += `<li class="page-item"><button class="page-link" onclick="goToPage(1)">1</button></li>`;
+                if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <button class="page-link" onclick="goToPage(${i})">${i}</button>
+                    </li>
+                `;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                html += `<li class="page-item"><button class="page-link" onclick="goToPage(${totalPages})">${totalPages}</button></li>`;
+            }
+
+            // Next button
+            html += `
+                <li class="page-item ${!hasNext ? 'disabled' : ''}">
+                    <button class="page-link" onclick="goToPage(${currentPage + 1})" ${!hasNext ? 'disabled' : ''}>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </li>
+            `;
+
+            html += '</ul></nav>';
+            controls.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            if (page < 1) return;
+            performSearch(page);
+        }
+
+        
 
         function displayMatchedProfiles(profiles) {
             const container = document.getElementById('matchedProfiles');
-            
+
             if (profiles.length === 0) {
                 container.innerHTML = `
                     <div class="alert alert-info text-center">
@@ -667,7 +725,7 @@
             }
 
             let html = '<h3 class="mb-4 text-center"><i class="fas fa-users me-2"></i>Matched Candidates</h3>';
-            
+
             profiles.forEach((profile, index) => {
                 const skills = parseSkills(profile.skills);
                 const experiences = parseExperiences(profile.experiences);
@@ -694,7 +752,7 @@
                                             <i class="fab fa-linkedin me-2"></i>View Profile
                                         </a>
                                     </div>
-                                    
+
                                     <div class="row g-3">
                                         <div class="col-sm-6">
                                             <div class="info-item">
@@ -720,7 +778,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="card-body p-4">
                             ${skills.length > 0 ? `
                                 <div class="mb-4">
@@ -755,43 +813,11 @@
                     </div>
                 `;
             });
-            
+
             container.innerHTML = html;
         }
 
-        function displayUnmatchedProfiles(profiles) {
-            const container = document.getElementById('unmatchedProfiles');
-            
-            if (profiles.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-
-            let html = '<h3 class="mb-4 text-center"><i class="fas fa-user-slash me-2"></i>Unmatched Profiles</h3><div class="row g-3">';
-            
-            profiles.forEach((profile) => {
-                html += `
-                    <div class="col-md-6 col-lg-4">
-                        <div class="unmatched-card card h-100 p-3">
-                            <div class="d-flex align-items-center">
-                                <img src="${profile.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face'}" 
-                                     class="rounded-circle me-3" width="60" height="60" alt="Profile Picture">
-                                <div class="flex-grow-1">
-                                    <h6 class="card-title mb-1">${profile.fullName || 'Unknown'}</h6>
-                                    <small class="text-muted d-block mb-2">${profile.addressWithCountry || 'Unknown Location'}</small>
-                                    <a href="${profile.linkedinUrl || '#'}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                        <i class="fab fa-linkedin me-1"></i>View
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
+        
 
         function parseSkills(skills) {
             if (Array.isArray(skills)) return skills.map(s => typeof s === 'object' ? s.title : s).filter(Boolean);
@@ -823,15 +849,7 @@
             return `<span class="score-badge score-poor">Poor: ${score}</span>`;
         }
 
-        function changePage(direction) {
-            if (!searchData) return;
-            
-            const newPage = currentPage + direction;
-            if (newPage < 0 || (direction > 0 && !searchData.has_next)) return;
-            
-            currentPage = newPage;
-            performSearch();
-        }
+        
 
         function showLoading(show, message = 'Processing your search...') {
             const overlay = document.getElementById('loadingOverlay');
@@ -846,7 +864,7 @@
         function showAlert(message, type = 'info') {
             const container = document.getElementById('alertContainer');
             const alertId = 'alert-' + Date.now();
-            
+
             const alertHTML = `
                 <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
                     <i class="fas fa-${getAlertIcon(type)} me-2"></i>
@@ -854,9 +872,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
-            
+
             container.insertAdjacentHTML('beforeend', alertHTML);
-            
+
             setTimeout(() => {
                 const alertElement = document.getElementById(alertId);
                 if (alertElement) alertElement.remove();

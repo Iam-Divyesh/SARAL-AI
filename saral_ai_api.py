@@ -15,7 +15,7 @@ except Exception as e:
         # Mock function when Azure OpenAI is not available
         import re
         words = query.lower().split()
-        
+
         # Extract job title (basic pattern matching)
         job_title = "Developer"
         if "python" in words: job_title = "Python Developer"
@@ -23,7 +23,7 @@ except Exception as e:
         elif "data" in words: job_title = "Data Scientist"
         elif "frontend" in words: job_title = "Frontend Developer"
         elif "backend" in words: job_title = "Backend Developer"
-        
+
         # Extract skills
         skills = []
         if "python" in words: skills.append("Python")
@@ -31,7 +31,7 @@ except Exception as e:
         if "javascript" in words: skills.append("JavaScript")
         if "react" in words: skills.append("React")
         if "django" in words: skills.append("Django")
-        
+
         # Extract experience
         experience = "2"
         for i, word in enumerate(words):
@@ -39,14 +39,14 @@ except Exception as e:
                 experience = word
                 break
         if "fresher" in words: experience = "fresher"
-        
+
         # Extract location
         location = []
         indian_cities = ["mumbai", "delhi", "bangalore", "pune", "hyderabad", "chennai", "kolkata", "ahmedabad", "surat", "gurgaon"]
         for city in indian_cities:
             if city in words:
                 location.append(city.title())
-        
+
         return {
             "job_title": job_title,
             "skills": skills,
@@ -56,7 +56,7 @@ except Exception as e:
             "job_type": "full-time" if "full-time" in words else None,
             "is_indian": True
         }
-    
+
     def prompt_enhancer(query): return query
 
 try:
@@ -106,25 +106,25 @@ def parse_query():
     try:
         data = request.get_json()
         query = data.get('query', '').strip()
-        
+
         if not query:
             return jsonify({'error': 'Please enter a valid query'}), 400
-            
+
         parsed_data = parse_recruiter_query(query)
-        
+
         if "error" in parsed_data:
             return jsonify({'error': parsed_data["error"]}), 400
-            
+
         # Store parsed data in session for later use
         session['parsed_data'] = parsed_data
         session['user_query'] = query
-        
+
         return jsonify({
             'success': True,
             'parsed_data': parsed_data,
             'is_indian': parsed_data.get('is_indian', True)
         })
-        
+
     except Exception as e:
         return jsonify({'error': f'Error parsing query: {str(e)}'}), 500
 
@@ -134,149 +134,169 @@ def enhance_prompt():
     try:
         data = request.get_json()
         query = data.get('query', '').strip()
-        
+
         if not query:
             return jsonify({'error': 'Please enter a valid query'}), 400
-            
+
         enhanced = prompt_enhancer(query)
         return jsonify({
             'success': True,
             'enhanced_query': enhanced
         })
-        
+
     except Exception as e:
         return jsonify({'error': f'Error enhancing prompt: {str(e)}'}), 500
 
 @app.route('/search', methods=['POST'])
 def search_profiles():
-    """Main search function that processes the entire workflow"""
+    """Main search function with live enriching - shows 10 candidates at a time"""
     try:
         # Ensure we always return JSON
         data = request.get_json()
         if data is None:
             return jsonify({'error': 'Invalid JSON data'}), 400
-            
+
         query = data.get('query', '').strip()
-        page = int(data.get('page', 0))
-        
+        page = data.get('page', 1)
+
         print(f"🔍 Search request: query='{query}', page={page}")
-        
+
         if not query:
             return jsonify({'error': 'Please enter a valid query'}), 400
-            
+
         # Parse the query
         print("📝 Parsing query...")
         parsed_data = parse_recruiter_query(query)
         print(f"✓ Parsed data: {parsed_data}")
-        
+
         if "error" in parsed_data:
             return jsonify({'error': parsed_data["error"]}), 400
-            
+
         if parsed_data.get("is_indian") is False:
             return jsonify({'error': 'Our platform currently supports searches within India only'}), 400
-        
+
         if parsed_data.get("is_valid") is False:
             return jsonify({'error': 'Please Give valid prompt so that Saral AI can understand'}), 400
-            
-        # Store prompt in database
-        print("💾 Storing prompt in database...")
-        try:
-            store_prompt(conn, query, parsed_data)
-        except Exception as e:
-            print(f"⚠️ Warning: Could not store prompt: {e}")
-        
+
+        # Store prompt in database (only on first page)
+        if page == 1:
+            print("💾 Storing prompt in database...")
+            try:
+                store_prompt(conn, query, parsed_data)
+            except Exception as e:
+                print(f"⚠️ Warning: Could not store prompt: {e}")
+
         # Generate search query
         print("🔗 Generating search query...")
         search_query, location = query_making(parsed_data)
         print(f"✓ Search query: {search_query}")
-        
-        # Pagination setup
+
+        # Live enriching: search only enough to get 10 candidates for current page
+        matched_profiles = []
+        unique_profile_urls = set()
+        serp_page = 0
+        target_candidates = page * 10  # Target enough candidates for current page
+        max_serp_pages = min(5, page + 2)  # Limit search depth for performance
         results_per_page = 10
-        start = page * results_per_page
-        
-        # SERP API call
-        print(f"🌐 Calling SERP API (start={start}, per_page={results_per_page})...")
-        serp_data = serp_api_call(search_query, start=start, results_per_page=results_per_page)
-        
-        if not serp_data:
-            return jsonify({
-                'success': True,
-                'matched_profiles': [],
-                'unmatched_profiles': [],
-                'matched_count': 0,
-                'unmatched_count': 0,
-                'current_page': page + 1,
-                'total_pages': 1,
-                'total_results': 0,
-                'parsed_data': parsed_data,
-                'has_next': False,
-                'has_prev': page > 0,
-                'message': 'No search results found'
-            })
+
+        print(f"🎯 Live enriching for page {page}, targeting {target_candidates} candidates...")
+
+        # Loop through SERP pages until we have enough candidates for current page
+        while len(matched_profiles) < target_candidates and serp_page < max_serp_pages:
+            start = serp_page * results_per_page
             
-        print(f"✓ SERP data received: {len(serp_data.get('organic_results', []))} results")
-        
-        # Check database for existing profiles
-        print("🔍 Checking database for existing profiles...")
-        saral_data, remain_urls = fetch_from_saral_data(serp_data, conn)
-        print(f"✓ Found {len(saral_data)} existing profiles, {len(remain_urls)} new URLs")
-        
-        # Fetch new profiles from Apify if needed
-        apify_json = []
-        if remain_urls:
-            print(f"🤖 Fetching {len(remain_urls)} new profiles from Apify...")
-            try:
-                serp_json = {idx: url for idx, url in enumerate(remain_urls, start=1)}
-                apify_json = apify_call(serp_json)
-                print(f"✓ Apify returned {len(apify_json)} profiles")
-            except Exception as e:
-                print(f"⚠️ Warning: Apify call failed: {e}")
-                apify_json = []
+            print(f"🌐 Calling SERP API (page={serp_page}, start={start})...")
+            serp_data = serp_api_call(search_query, start=start, results_per_page=results_per_page)
+
+            if not serp_data or not serp_data.get('organic_results'):
+                print(f"⚠️ No more results found at page {serp_page}")
+                break
+
+            print(f"✓ SERP data received: {len(serp_data.get('organic_results', []))} results")
+
+            # Check database for existing profiles
+            print("🔍 Checking database for existing profiles...")
+            saral_data, remain_urls = fetch_from_saral_data(serp_data, conn)
+            print(f"✓ Found {len(saral_data)} existing profiles, {len(remain_urls)} new URLs")
+
+            # Fetch new profiles from Apify if needed
+            apify_json = []
+            if remain_urls:
+                print(f"🤖 Fetching {len(remain_urls)} new profiles from Apify...")
+                try:
+                    serp_json = {idx: url for idx, url in enumerate(remain_urls, start=1)}
+                    apify_json = apify_call(serp_json)
+                    print(f"✓ Apify returned {len(apify_json)} profiles")
+                except Exception as e:
+                    print(f"⚠️ Warning: Apify call failed: {e}")
+                    apify_json = []
+
+            # Combine all candidates
+            total_candidates = saral_data + apify_json if apify_json else saral_data
+
+            print(f"✓ Total candidates for page {serp_page}: {len(total_candidates)}")
+
+            # Store new candidates in database
+            if total_candidates:
+                print("💾 Storing new candidates in database...")
+                try:
+                    data_input(total_candidates)
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not store candidates: {e}")
+
+            # Validate and get only matched candidates (no unmatched)
+            print("🎯 Validating candidates...")
+            matched_batch, _ = validate_function(location, total_candidates)  # Ignore unmatched
             
-        # Combine all candidates
-        if apify_json:
-            total_candidates = saral_data + apify_json
-        else:
-            total_candidates = saral_data
-            
-        print(f"✓ Total candidates: {len(total_candidates)}")
+            # Filter unique profiles based on LinkedIn URL
+            for profile in matched_batch:
+                profile_url = profile.get('linkedinUrl', '')
+                if profile_url and profile_url not in unique_profile_urls:
+                    unique_profile_urls.add(profile_url)
+                    matched_profiles.append(profile)
+
+            print(f"✓ Progress: {len(matched_profiles)} total matched candidates collected")
+            serp_page += 1
+
+        # Score and rank matched profiles
+        print("🏆 Scoring and ranking matched profiles...")
+        matched_profiles = score_candidates(parsed_data, matched_profiles)
         
-        # Store new candidates in database
-        if total_candidates:
-            print("💾 Storing new candidates in database...")
-            try:
-                data_input(total_candidates)
-            except Exception as e:
-                print(f"⚠️ Warning: Could not store candidates: {e}")
-            
-        # Validate and score candidates
-        print("🎯 Validating and scoring candidates...")
-        matched, unmatched = validate_function(location, total_candidates)
-        matched = score_candidates(parsed_data, matched)
+        # Sort by score in descending order (highest score first)
+        matched_profiles.sort(key=lambda x: x.get('score', 0), reverse=True)
+        print(f"✅ Ranked {len(matched_profiles)} profiles by score")
+
+        # Pagination logic - show 10 candidates per page
+        profiles_per_page = 10
+        start_index = (page - 1) * profiles_per_page
+        end_index = start_index + profiles_per_page
         
-        print(f"✓ Results: {len(matched)} matched, {len(unmatched)} unmatched")
+        paginated_profiles = matched_profiles[start_index:end_index]
         
-        # Check if there are more results by looking at SERP data
-        total_serp_results = serp_data.get('search_information', {}).get('total_results', 0)
-        if total_serp_results == 0:
-            total_serp_results = len(serp_data.get('organic_results', []))
-            
-        has_next = (page + 1) * results_per_page < total_serp_results
-        total_pages = max(1, (total_serp_results + results_per_page - 1) // results_per_page) if total_serp_results > 0 else 1
+        # Calculate pagination info
+        total_available = len(matched_profiles)
+        has_more_data = serp_page < 20  # Assume more data available if we haven't exhausted search
+        estimated_total_pages = max(page + 1 if has_more_data else page, 
+                                  (total_available + profiles_per_page - 1) // profiles_per_page)
         
+        has_next = len(paginated_profiles) == profiles_per_page and (page * profiles_per_page < total_available or has_more_data)
+        has_prev = page > 1
+
+        print(f"✅ Page {page} Results: showing {len(paginated_profiles)} profiles")
+
         return jsonify({
             'success': True,
-            'matched_profiles': matched,
-            'matched_count': len(matched),
-            'current_page': page + 1,
-            'total_pages': total_pages,
-            'total_results': total_serp_results,
-            'parsed_data': parsed_data,
+            'matched_profiles': paginated_profiles,
+            'matched_count': len(paginated_profiles),
+            'total_matched': total_available,
+            'current_page': page,
+            'total_pages': estimated_total_pages,
             'has_next': has_next,
-            'has_prev': page > 0
+            'has_prev': has_prev,
+            'is_live_enriched': True,
+            'parsed_data': parsed_data
         })
 
-        
     except Exception as e:
         # Log the full traceback for debugging
         print(f"❌ Search error: {str(e)}")

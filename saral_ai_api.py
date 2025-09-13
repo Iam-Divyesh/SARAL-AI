@@ -49,11 +49,11 @@ except Exception as e:
 
         return {
             "job_title": job_title,
-            "skills": skills,
+            "skills": skills if skills else [],  # Ensure always a list
             "experience": experience,
-            "location": location,
-            "work_preference": "remote" if "remote" in words else None,
-            "job_type": "full-time" if "full-time" in words else None,
+            "location": location if location else [],  # Ensure always a list
+            "work_preference": "remote" if "remote" in words else "",
+            "job_type": "full-time" if "full-time" in words else "",
             "is_indian": True
         }
 
@@ -260,11 +260,27 @@ def search_profiles():
 
         # Score and rank matched profiles
         print("🏆 Scoring and ranking matched profiles...")
-        matched_profiles = score_candidates(parsed_data, matched_profiles)
         
-        # Sort by score in descending order (highest score first)
-        matched_profiles.sort(key=lambda x: x.get('score', 0), reverse=True)
-        print(f"✅ Ranked {len(matched_profiles)} profiles by score")
+        # Ensure parsed_data has valid structure for scoring
+        validated_parsed_data = {
+            'job_title': parsed_data.get('job_title', ''),
+            'skills': parsed_data.get('skills') or [],  # Convert None to empty list
+            'experience': parsed_data.get('experience', ''),
+            'location': parsed_data.get('location') or [],  # Convert None to empty list
+            'work_preference': parsed_data.get('work_preference', ''),
+            'job_type': parsed_data.get('job_type', ''),
+            'is_indian': parsed_data.get('is_indian', True)
+        }
+        
+        # Only score if we have matched profiles
+        if matched_profiles:
+            matched_profiles = score_candidates(validated_parsed_data, matched_profiles)
+            
+            # Sort by score in descending order (highest score first)
+            matched_profiles.sort(key=lambda x: x.get('score', 0), reverse=True)
+            print(f"✅ Ranked {len(matched_profiles)} profiles by score")
+        else:
+            print("⚠️ No matched profiles to score")
 
         # Pagination logic - show 10 candidates per page
         profiles_per_page = 10

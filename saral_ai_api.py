@@ -7,7 +7,7 @@ load_dotenv()
 
 # Try to import modules with error handling
 try:
-    from nlp_parsed import parse_recruiter_query, prompt_enhancer
+    from nlp_parsed import parse_recruiter_query, prompt_enhancer, profile_summary, client , deployment
     print("✓ NLP module imported successfully")
 except Exception as e:
     print(f"✗ Error importing nlp_parsed: {e}")
@@ -248,10 +248,24 @@ def search_profiles():
             print("🎯 Validating candidates...")
             matched_batch, _ = validate_function(location, total_candidates)  # Ignore unmatched
             
-            # Filter unique profiles based on LinkedIn URL
+            # Filter unique profiles based on LinkedIn URL and ensure they have name
             for profile in matched_batch:
+                # Skip if profile is None
+                if not profile:
+                    continue
+                    
                 profile_url = profile.get('linkedinUrl', '')
-                if profile_url and profile_url not in unique_profile_urls:
+                profile_name = profile.get('fullName', '')
+                
+                # Safely handle fullName - check if it exists and is not None before strip
+                if profile_name:
+                    profile_name = profile_name.strip()
+                else:
+                    profile_name = ''
+                
+                # Only add profiles that have both URL and name
+                if (profile_url and profile_url not in unique_profile_urls and 
+                    profile_name and profile_name.lower() != 'none'):
                     unique_profile_urls.add(profile_url)
                     matched_profiles.append(profile)
 
@@ -275,6 +289,12 @@ def search_profiles():
         # Only score if we have matched profiles
         if matched_profiles:
             matched_profiles = score_candidates(validated_parsed_data, matched_profiles)
+            
+            # Filter out profiles without valid scores
+            matched_profiles = [
+                profile for profile in matched_profiles 
+                if profile.get('score') is not None and profile.get('score') > 0
+            ]
             
             # Sort by score in descending order (highest score first)
             matched_profiles.sort(key=lambda x: x.get('score', 0), reverse=True)
@@ -327,6 +347,61 @@ def search_profiles():
 def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'message': 'Saral AI Flask API is running'})
+
+@app.route('/profile_summary', methods=['POST'])
+def get_profile_summary():
+    """Generate structured profile summary and evaluation for a candidate"""
+    try:
+        # Get JSON data from request
+        data = request.get_json()
+        if data is None:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+
+        # Extract profile from request data
+        profile = data.get('profile')
+        if not profile:
+            return jsonify({'error': 'Profile data is required'}), 400
+
+        print(f"📊 Generating profile summary for: {profile.get('fullName', 'Unknown')}")
+
+        # Call the profile_summary function
+        try:
+            summary_result = profile_summary(profile , client , deployment)
+            
+            # Check if there was an error in profile_summary
+            if isinstance(summary_result, dict) and "error" in summary_result:
+                print(f"❌ Profile summary error: {summary_result['error']}")
+                return jsonify({
+                    'success': False,
+                    'error': summary_result['error']
+                }), 500
+
+            print(f"✅ Profile summary generated successfully")
+            
+            return jsonify({
+                'success': True,
+                'profile_summary': summary_result,
+                'candidate_name': profile.get('fullName', 'Unknown'),
+                'linkedin_url': profile.get('linkedinUrl', '')
+            })
+
+        except Exception as summary_error:
+            print(f"❌ Error in profile_summary function: {str(summary_error)}")
+            return jsonify({
+                'success': False,
+                'error': f'Failed to generate profile summary: {str(summary_error)}'
+            }), 500
+
+    except Exception as e:
+        print(f"❌ Profile summary endpoint error: {str(e)}")
+        print(f"📋 Traceback: {traceback.format_exc()}")
+        return jsonify({
+            'success': False,
+            'error': f'Profile summary failed: {str(e)}',
+            'traceback': traceback.format_exc() if app.debug else None
+        }), 500
+
+
 
 if __name__ == '__main__':
     # Use 0.0.0.0 to bind to all interfaces for Replit

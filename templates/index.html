@@ -715,18 +715,29 @@
         function displayMatchedProfiles(profiles) {
             const container = document.getElementById('matchedProfiles');
 
-            if (profiles.length === 0) {
+            // Filter profiles that have both name and score
+            const validProfiles = profiles.filter(profile => {
+                const hasName = profile.fullName && 
+                               profile.fullName.trim() !== '' && 
+                               profile.fullName.toLowerCase() !== 'none';
+                const hasScore = profile.score !== null && 
+                               profile.score !== undefined && 
+                               profile.score > 0;
+                return hasName && hasScore;
+            });
+
+            if (validProfiles.length === 0) {
                 container.innerHTML = `
                     <div class="alert alert-info text-center">
                         <i class="fas fa-info-circle me-2"></i>
-                        No matched profiles found for this page. Try adjusting your search criteria.
+                        No valid profiles found for this page. Try adjusting your search criteria.
                     </div>`;
                 return;
             }
 
             let html = '<h3 class="mb-4 text-center"><i class="fas fa-users me-2"></i>Matched Candidates</h3>';
 
-            profiles.forEach((profile, index) => {
+            validProfiles.forEach((profile, index) => {
                 const skills = parseSkills(profile.skills);
                 const experiences = parseExperiences(profile.experiences);
                 const openToWork = checkOpenToWork(experiences);

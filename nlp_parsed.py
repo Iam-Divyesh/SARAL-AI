@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from openai import AzureOpenAI
 import json
 from postgres_db import store_prompt, conn
+from candidates import candidates
+
 
 load_dotenv()
 
@@ -201,3 +203,84 @@ def prompt_enhancer(prompt: str) -> str:
         print(f"Error in prompt_enhancer: {e}")
         return prompt  # fallback to original
     
+
+
+def profile_summary(profiles: list, client=None, deployment=None):
+    """
+    Generate structured profile summary and evaluation for multiple candidates.
+    Each profile should be a dict inside the list.
+    """
+    results = []
+    
+    system_prompt = """
+    You are an expert AI recruiter.
+
+    TASK:
+    For each candidate profile JSON, return ONLY a valid JSON object with the following structure:
+
+    {
+      "strengths": ["point1", "point2", "point3"],
+      "weaknesses": ["point1", "point2"],
+      "saral_summary": {
+        "profile_category": "Low/Medium/High",
+        "best_fit_roles": ["Role1", "Role2"]
+      },
+      "overall_verdict": "1–2 sentence recommendation"
+    }
+
+    RULES:
+    1. STRICTLY return only valid JSON. No explanations, no markdown, no text outside the JSON.
+    2. "strengths" must have 3–5 concise, positive skill/experience highlights.
+    3. "weaknesses" must have 1–3 realistic improvement areas.
+    4. "saral_summary.profile_category" must be derived from `fit_score` (0–30=Low, 31–70=Medium, 71–100=High).
+    5. "saral_summary.best_fit_roles" must contain exactly 2 roles related to their domain.
+    6. DO NOT repeat the candidate’s current role/headline in best_fit_roles. Instead, suggest alternative but relevant roles
+       based on their skills, experience, and career progression. 
+       Example: 
+       If headline = "Business Development Executive", best_fit_roles can be ["Business Development Manager", "Sales Executive"], but never "Business Development Executive" again.
+       
+       If headline = "Software Engineer", best_fit_roles can be ["Full Stack Developer", "Backend Developer"], but never "Software Engineer" again.  
+
+       If headline = "Data Analyst", best_fit_roles can be ["Business Intelligence Analyst", "Data Scientist"], but never "Data Analyst" again.  
+
+       If headline = "Graphic Designer", best_fit_roles can be ["UI/UX Designer", "Visual Designer"], but never "Graphic Designer" again.  
+
+       If headline = "HR Executive", best_fit_roles can be ["HR Manager", "Talent Acquisition Specialist"], but never "HR Executive" again.  
+
+       If headline = "Content Writer", best_fit_roles can be ["Copywriter", "Content Strategist"], but never "Content Writer" again.  
+
+    7. Roles must be derived ONLY from the candidate's profile (headline, skills, experience). No invented roles, no unrelated domains.
+    8. "overall_verdict" must be a recruiter-ready recommendation in max 2 sentences.
+    9. Return results for multiple candidates as a JSON list of objects, one per candidate.
+    """
+
+    try:
+        user_prompt = f"""
+        Candidate profiles JSON list:
+        {json.dumps(profiles, indent=2)}
+
+        Now return ONLY the JSON list as per the defined schema.
+        """
+
+        response = client.chat.completions.create(
+            model=deployment,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.0,
+            max_tokens=1500
+        )
+
+        # Parse AI response
+        result = json.loads(response.choices[0].message.content.strip())
+        results = result
+
+    except json.JSONDecodeError:
+        results = {"error": "Invalid JSON returned from AI"}
+    except Exception as e:
+        results = {"error": f"Unexpected error: {str(e)}"}
+    
+    return results
+
+

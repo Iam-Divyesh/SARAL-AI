@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 
 
-hostname = "13.233.107.79"
+hostname = "43.205.29.110"
 database = "saral_ai"
 username = "saral_user"
 pwd = "8k$ScgT97y9£>D"
@@ -175,7 +175,7 @@ def store_prompt(conn, prompt: str, parsed_json: dict):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO saral_prompt
+                INSERT INTO saral_prompts
                 (prompt, job_title, skills, experience, location, work_preference, job_type, created_at,is_indian)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)
             """, (

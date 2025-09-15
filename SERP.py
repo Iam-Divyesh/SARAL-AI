@@ -2,6 +2,7 @@ import requests
 import os 
 from dotenv import load_dotenv
 from postgres_db import fetch_from_saral_data , data_input , check_completeness, cur, get_connection
+import re
 
 
 load_dotenv()
@@ -22,9 +23,18 @@ def query_making(data):
             for i in data['skills']:
                   query += f' "{i}"'
             
-      if data['experience']:
-            exp = data["experience"]
-            query += f' "{exp} years" OR "{exp}+ years"'
+      if data.get('experience'):
+        exp = str(data['experience']).lower()
+        if 'fresher' in exp or 'entry' in exp or 'fresh' in exp:
+            query += ' "Fresher"'
+        else:
+            # Normalize ranges: "2 to 3", "2-3" -> "2-3"
+            exp_range = re.sub(r'\s*(to|-)\s*', '-', exp)
+            # Ensure numeric only at start
+            exp_range = re.findall(r'\d+-?\d*\+?', exp_range)
+            if exp_range:
+                exp_str = exp_range[0]
+                query += f' "{exp_str} years" OR "{exp_str}+ years"'
             
       if data['location']:
             if type(data['location']) == list:

@@ -205,82 +205,262 @@ def prompt_enhancer(prompt: str) -> str:
     
 
 
-def profile_summary(profiles: list, client=None, deployment=None):
+# def profile_summary(profiles: list, client=None, deployment=None):
+#       """
+#       Generate structured profile summary and evaluation for multiple candidates.
+#       Each profile should be a dict inside the list.
+#       """
+#       results = []
+#       system_prompt = """
+#         You are an expert AI recruiter specializing in comprehensive candidate analysis.
+#         TASK:
+#         For each candidate profile JSON, return ONLY a valid JSON object with the following structure:
+#         {
+#         "profile_summary": "2-3 sentence (must have 200 characters) overview of candidate's professional background and key value proposition",
+#         "saral_insight": {
+#           "strengths": ["point1", "point2", "point3"],
+#           "red_flags": ["flag1", "flag2"],
+#           "best_fit_roles": ["Role1", "Role2"]
+#         },
+#         "professional_experience": [
+#           {
+#           "job_title": "Senior Full Stack Developer",
+#           "duration": "2.5 years",
+#           "company_and_dates": "TechCorp • 2022 - Present"
+#           }
+#         ],
+#         "career_stability_overview": {
+#           "average_tenure": "X.X years",
+#           "current_role": "X.X years", 
+#           "total_experience": "X.X years"
+#         },
+#         "one_line_overview": "Dynamic stability assessment based on actual career pattern"
+#         }
+#         RULES:
+#         1. STRICTLY return only valid JSON. No explanations, no markdown, no text outside the JSON.
+#         2. "one_line_overview" must be contextual and vary based on actual career patterns and must be less than 100 characters.
+#         3. Calculate actual numbers from the professional experience and incorporate them into the assessment.
+#         4. "saral_insight.strengths" min 2 and max 4 concise (best try to get 4 points, should), quantifiable skill/experience highlights explaine in 10 to 12 words per each point.
+#         5. "saral_insight.red_flags" rules:
+#           - If the candidate is a fresher (no prior work experience), mark it as a red flag.
+#           - If the candidate has switched across unrelated fields (e.g., Design → Marketing → Tech), mark it as a red flag.
+#           - If the candidate shows inconsistent career patterns (multiple short stints under 1 year, frequent changes), mark it as a red flag.
+#           - If the candidate has significant career gaps (over 6 months), mark it as a red flag.
+#           - Each red flag must be expressed as a clear, concise sentence of 10–12 words (e.g., "Lacks professional industry experience" or "Frequent job changes raise stability concerns").
+#           - If none of the above apply, use "None identified".
+#         6. "saral_insight.best_fit_roles" must contain exactly 2 roles with strict restrictions:
+#           - DO NOT repeat ANY role titles from the candidate's work history (current OR past positions).
+#           - DO NOT use synonyms, variations, or near-matches of existing/past job titles.
+#           - DO NOT suggest irrelevant, highly specialized, or unrelated roles (e.g., Technical Architect, Tech Evangelist, Research Scientist) unless the profile explicitly shows expertise in that domain.
+#           - Roles must reflect **natural career progression** (e.g., Engineer → Manager/Lead, Analyst → Strategist) or **adjacent functional moves** (e.g., Product → Business Analysis, Operations, Strategy).
+#           - Prioritize **managerial, analytical, or strategic roles** over niche technical tracks unless the candidate’s experience justifies it.
+#         7. "professional_experience" must cover the entire work history with job_title, duration, and company_and_dates format.
+#         8. "career_stability_overview" must calculate average_tenure, current_role, and total_experience in "X.X years" format, following these rules:
+#           - Use months as the base unit for all calculations.
+#             • Example: 1.2 years = 14 months (12 months + 2 months), 2.7 years = 31 months (24 months + 7 months).
+#           - If multiple roles overlap in dates (including within the same company), count overlapping time only once for total_experience.
+#           - total_experience = sum of all non-overlapping durations across the entire career (in months → then converted to years).
+#           - average_tenure = total_experience ÷ number of distinct roles (count roles, but avoid double-counting overlapping months).
+#           - current_role = duration of the most recent role.
+#           - Ensure consistency: 
+#             • The sum of non-overlapping months should closely match total_experience.
+#             • Average tenure must logically align with total_experience ÷ roles.
+#           - Convert months to mentioned at the final step, (e.g., 1 year 5 months , 2 years 7 months , 0 years 11 months).
+#         9. Return results for multiple candidates as a JSON array of objects.
+#         """
+#       try:
+#         user_prompt = f"""
+#         Candidate profiles JSON list:
+#         {json.dumps(profiles, indent=2)}
+#         Now return ONLY the JSON list as per the defined schema.
+#         """
+#         response = client.chat.completions.create(
+#           model=deployment,
+#           messages=[
+#             {"role": "system", "content": system_prompt},
+#             {"role": "user", "content": user_prompt}
+#           ],
+#           temperature=0.0,
+#           max_tokens=1500
+#         )
+#         # Parse AI response
+#         result = json.loads(response.choices[0].message.content.strip())
+#         results = result
+#       except json.JSONDecodeError:
+#         results = {"error": "Invalid JSON returned from AI"}
+#       except Exception as e:
+#         results = {"error": f"Unexpected error: {str(e)}"}
+   
+#       return results
+
+
+
+def calculate_career_stability(professional_experience):
     """
-    Generate structured profile summary and evaluation for multiple candidates.
-    Each profile should be a dict inside the list.
-    """
-    results = []
+    Calculate career stability overview from professional experience data.
     
-    system_prompt = """
-    You are an expert AI recruiter.
-
-    TASK:
-    For each candidate profile JSON, return ONLY a valid JSON object with the following structure:
-
-    {
-      "strengths": ["point1", "point2", "point3"],
-      "weaknesses": ["point1", "point2"],
-      "saral_summary": {
-        "profile_category": "Low/Medium/High",
-        "best_fit_roles": ["Role1", "Role2"]
-      },
-      "overall_verdict": "1–2 sentence recommendation"
+    Args:
+        professional_experience: List of work experience dictionaries with 'duration' field
+        
+    Returns:
+        Dict with average_tenure, current_role, and total_experience in "X years Y months" format
+    """
+    if not professional_experience:
+        return {
+            "average_tenure": "0 years 0 months",
+            "current_role": "0 years 0 months", 
+            "total_experience": "0 years 0 months"
+        }
+    
+    def parse_duration_to_months(duration_str):
+        """Parse duration string to total months"""
+        if not duration_str:
+            return 0
+            
+        duration_str = duration_str.lower().strip()
+        total_months = 0
+        
+        # Extract years (handle both "years", "year", "yrs", "yr")
+        year_match = re.search(r'(\d+)\s*(?:years?|yrs?)', duration_str)
+        if year_match:
+            total_months += int(year_match.group(1)) * 12
+            
+        # Extract months (handle both "months", "month", "mos", "mo")
+        month_match = re.search(r'(\d+)\s*(?:months?|mos?)', duration_str)
+        if month_match:
+            total_months += int(month_match.group(1))
+            
+        # If only a number is provided, assume it's years
+        if not year_match and not month_match:
+            number_match = re.search(r'(\d+(?:\.\d+)?)', duration_str)
+            if number_match:
+                years = float(number_match.group(1))
+                total_months = int(years * 12)
+                
+        return total_months
+    
+    def months_to_duration_string(months):
+        """Convert months to 'X years Y months' format"""
+        if months == 0:
+            return "0 years 0 months"
+            
+        years = months // 12
+        remaining_months = months % 12
+        
+        if years == 0:
+            return f"0 years {remaining_months} months"
+        elif remaining_months == 0:
+            return f"{years} years 0 months"
+        else:
+            return f"{years} years {remaining_months} months"
+    
+    # Calculate total experience in months
+    total_months = 0
+    for exp in professional_experience:
+        duration = exp.get('duration', '')
+        months = parse_duration_to_months(duration)
+        total_months += months
+    
+    # Current role is the first entry (most recent)
+    current_role_months = parse_duration_to_months(professional_experience[0].get('duration', ''))
+    
+    # Average tenure
+    num_roles = len(professional_experience)
+    average_months = total_months // num_roles if num_roles > 0 else 0
+    
+    return {
+        "average_tenure": months_to_duration_string(average_months),
+        "current_role": months_to_duration_string(current_role_months),
+        "total_experience": months_to_duration_string(total_months)
     }
 
-    RULES:
-    1. STRICTLY return only valid JSON. No explanations, no markdown, no text outside the JSON.
-    2. "strengths" must have 3–5 concise, positive skill/experience highlights.
-    3. "weaknesses" must have 1–3 realistic improvement areas.
-    4. "saral_summary.profile_category" must be derived from `fit_score` (0–30=Low, 31–70=Medium, 71–100=High).
-    5. "saral_summary.best_fit_roles" must contain exactly 2 roles related to their domain.
-    6. DO NOT repeat the candidate’s current role/headline in best_fit_roles. Instead, suggest alternative but relevant roles
-       based on their skills, experience, and career progression. 
-       Example: 
-       If headline = "Business Development Executive", best_fit_roles can be ["Business Development Manager", "Sales Executive"], but never "Business Development Executive" again.
-       
-       If headline = "Software Engineer", best_fit_roles can be ["Full Stack Developer", "Backend Developer"], but never "Software Engineer" again.  
 
-       If headline = "Data Analyst", best_fit_roles can be ["Business Intelligence Analyst", "Data Scientist"], but never "Data Analyst" again.  
-
-       If headline = "Graphic Designer", best_fit_roles can be ["UI/UX Designer", "Visual Designer"], but never "Graphic Designer" again.  
-
-       If headline = "HR Executive", best_fit_roles can be ["HR Manager", "Talent Acquisition Specialist"], but never "HR Executive" again.  
-
-       If headline = "Content Writer", best_fit_roles can be ["Copywriter", "Content Strategist"], but never "Content Writer" again.  
-
-    7. Roles must be derived ONLY from the candidate's profile (headline, skills, experience). No invented roles, no unrelated domains.
-    8. "overall_verdict" must be a recruiter-ready recommendation in max 2 sentences.
-    9. Return results for multiple candidates as a JSON list of objects, one per candidate.
-    """
-
-    try:
+def profile_summary(profiles: list, client=None, deployment=None):
+      """
+      Generate structured profile summary and evaluation for multiple candidates.
+      Each profile should be a dict inside the list.
+      """
+      results = []
+      system_prompt = """
+        You are an expert AI recruiter specializing in comprehensive candidate analysis.
+        TASK:
+        For each candidate profile JSON, return ONLY a valid JSON object with the following structure:
+        {
+        "profile_summary": "2-3 sentence (must have 200 characters) overview of candidate's professional background and key value proposition",
+        "saral_insight": {
+          "strengths": ["point1", "point2", "point3"],
+          "red_flags": ["flag1", "flag2"],
+          "best_fit_roles": ["Role1", "Role2"]
+        },
+        "professional_experience": [
+          {
+          "job_title": "Senior Full Stack Developer",
+          "duration": "2.5 years",
+          "company_and_dates": "TechCorp • 2022 - Present"
+          }
+        ],
+        "career_stability_overview": {
+          "average_tenure": "X.X years",
+          "current_role": "X.X years", 
+          "total_experience": "X.X years"
+        },
+        "one_line_overview": "Dynamic stability assessment based on actual career pattern"
+        }
+        RULES:
+        1. STRICTLY return only valid JSON. No explanations, no markdown, no text outside the JSON.
+        2. "one_line_overview" must be contextual and vary based on actual career patterns and must be less than 100 characters.
+        3. Calculate actual numbers from the professional experience and incorporate them into the assessment.
+        4. "saral_insight.strengths" min 2 and max 4 concise (best try to get 4 points, should), quantifiable skill/experience highlights explaine in 10 to 12 words per each point.
+        5. "saral_insight.red_flags" rules:
+          - If the candidate is a fresher (no prior work experience), mark it as a red flag.
+          - If the candidate has switched across unrelated fields (e.g., Design → Marketing → Tech), mark it as a red flag.
+          - If the candidate shows inconsistent career patterns (multiple short stints under 1 year, frequent changes), mark it as a red flag.
+          - If the candidate has significant career gaps (over 6 months), mark it as a red flag.
+          - Each red flag must be expressed as a clear, concise sentence of 10–12 words (e.g., "Lacks professional industry experience" or "Frequent job changes raise stability concerns").
+          - If none of the above apply, use "None identified".
+        6. "saral_insight.best_fit_roles" must contain exactly 2 roles with strict restrictions:
+          - DO NOT repeat ANY role titles from the candidate's work history (current OR past positions).
+          - DO NOT use synonyms, variations, or near-matches of existing/past job titles.
+          - DO NOT suggest irrelevant, highly specialized, or unrelated roles (e.g., Technical Architect, Tech Evangelist, Research Scientist) unless the profile explicitly shows expertise in that domain.
+          - Roles must reflect **natural career progression** (e.g., Engineer → Manager/Lead, Analyst → Strategist) or **adjacent functional moves** (e.g., Product → Business Analysis, Operations, Strategy).
+          - Prioritize **managerial, analytical, or strategic roles** over niche technical tracks unless the candidate’s experience justifies it.
+        7. "professional_experience" must cover the entire work history with job_title, duration, and company_and_dates format.
+        8. "career_stability_overview" will be calculated separately - just provide the professional_experience data.
+        9. Return results for multiple candidates as a JSON array of objects.
+        """
+      try:
         user_prompt = f"""
         Candidate profiles JSON list:
         {json.dumps(profiles, indent=2)}
-
         Now return ONLY the JSON list as per the defined schema.
         """
-
         response = client.chat.completions.create(
-            model=deployment,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.0,
-            max_tokens=1500
+          model=deployment,
+          messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+          ],
+          temperature=0.0,
+          max_tokens=1500
         )
-
         # Parse AI response
         result = json.loads(response.choices[0].message.content.strip())
+        
+        # If result is a single object, convert to list for processing
+        if isinstance(result, dict):
+            result = [result]
+        
+        # Calculate career stability for each profile
+        for profile_result in result:
+            if 'professional_experience' in profile_result:
+                career_stability = calculate_career_stability(profile_result['professional_experience'])
+                profile_result['career_stability_overview'] = career_stability
+        
         results = result
-
-    except json.JSONDecodeError:
+      except json.JSONDecodeError:
         results = {"error": "Invalid JSON returned from AI"}
-    except Exception as e:
+      except Exception as e:
         results = {"error": f"Unexpected error: {str(e)}"}
-    
-    return results
 
+      return results
 
